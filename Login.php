@@ -17,7 +17,7 @@
             <input type="text" placeholder="Correo" class="input" id="correo" >
             <input type="password" placeholder="Contraseña" class="input" id="contraseña">
             <input name="login-btn" type="submit" value="Iniciar Sesión" class="btn">
-            <a href="Registro.html">¿No tienes usuario?</a>
+            <a href="Registro.php">¿No tienes usuario?</a>
             </form>
         </div>
     </div>
