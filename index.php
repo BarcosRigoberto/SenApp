@@ -1,4 +1,9 @@
-<?php   
+<?php
+session_start();
+if (isset($_SESSION['usuario'])) {
+    header("Location: PagPrincipal.php");
+    exit();
+}
 ?>
 <html lang="en">
 <head>
