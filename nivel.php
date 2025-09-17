@@ -31,25 +31,22 @@ if(isset($_POST['respuesta']) && $ejercicio['type'] == 'Escribir') {
     
     $esCorrecta = ($respuesta_usuario === $respuesta_correcta);
 
-    // Si es correcta, registrar progreso (marcar ejercicio como completado)
+    // Si es correcta, actualizar el estado del ejercicio
     if ($esCorrecta && isset($_SESSION['user_id'])) {
-        $insert_prog = "INSERT INTO progreso_ejercicio (user_id, id_ej, completado, fecha)
-                        VALUES (?, ?, 1, NOW())
-                        ON DUPLICATE KEY UPDATE completado = 1, fecha = NOW()";
-        $pst = $conexion->prepare($insert_prog);
-        if ($pst) { $pst->bind_param('ii', $_SESSION['user_id'], $ejercicio['id_ej']); $pst->execute(); $pst->close(); }
+        $update = "UPDATE ejercicio SET estado_completado = 1 WHERE id_ej = ?";
+        $pst = $conexion->prepare($update);
+        if ($pst) { $pst->bind_param('i', $ejercicio['id_ej']); $pst->execute(); $pst->close(); }
     }
 }
 
 // Procesar respuesta tipo Elegir
 if(isset($_POST['opcion']) && $ejercicio['type'] == 'Elegir') {
     $esCorrecta = ($_POST['opcion'] === $ejercicio['rtaAcorrect']);
+    // Si es correcta, actualizar el estado del ejercicio
     if ($esCorrecta && isset($_SESSION['user_id'])) {
-        $insert_prog = "INSERT INTO progreso_ejercicio (user_id, id_ej, completado, fecha)
-                        VALUES (?, ?, 1, NOW())
-                        ON DUPLICATE KEY UPDATE completado = 1, fecha = NOW()";
-        $pst = $conexion->prepare($insert_prog);
-        if ($pst) { $pst->bind_param('ii', $_SESSION['user_id'], $ejercicio['id_ej']); $pst->execute(); $pst->close(); }
+        $update = "UPDATE ejercicio SET estado_completado = 1 WHERE id_ej = ?";
+        $pst = $conexion->prepare($update);
+        if ($pst) { $pst->bind_param('i', $ejercicio['id_ej']); $pst->execute(); $pst->close(); }
     }
 }
 
