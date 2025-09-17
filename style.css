@@ -1,12 +1,119 @@
 /* Estilos base compartidos */
 :root {
+    /* Colores principales */
     --primary-color: #f46a13;
     --primary-hover: #b44704;
     --background-color: #e4e4e4;
     --text-color: #333;
+    
+    /* Estados y feedback */
+    --success-color: #4caf50;
+
+/* Estilos para la página de inicio */
+.welcome-layout {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+}
+
+.content-section {
+    flex: 1;
+    background-color: white;
+    padding: 60px 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 400px;
+    max-width: 500px;
+}
+
+.logo-section {
+    flex: 1;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.logo-section::before {
+    content: '';
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    background: rgba(255, 255, 255, 0.1);
+    transform-origin: center;
+    animation: rotate 20s linear infinite;
+}
+
+@keyframes rotate {
+    100% { transform: rotate(360deg); }
+}
+
+.giant-logo {
+    width: 60%;
+    max-width: 400px;
+    animation: float 6s ease-in-out infinite;
+    position: relative;
+    z-index: 1;
+}
+
+@keyframes float {
+    50% { transform: translateY(-20px); }
+}
+
+.bienvenida h1 {
+    font-size: 2.5em;
+    color: var(--text-color);
+    margin-bottom: 0.5em;
+    font-weight: bold;
+}
+
+.app-description {
+    font-size: 1.1em;
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 2em;
+}
+
+.button-section {
+    margin-top: 2em;
+}
+
+.btn-comenzar {
+    display: inline-block;
+    padding: 15px 30px;
+    background-color: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border-radius: var(--border-radius);
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1em;
+}
+
+.btn-comenzar:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+    --error-color: #f44336;
+    --incomplete-color: #808080;
+    --complete-color: var(--primary-color);
+    
+    /* Diseño y espaciado */
     --container-shadow: 0 0 15px rgba(0,0,0,0.1);
     --border-radius: 10px;
     --spacing-unit: 15px;
+    
+    /* Tamaños de fuente */
+    --font-size-small: 0.875rem;
+    --font-size-normal: 1rem;
+    --font-size-large: 1.25rem;
+    --font-size-xlarge: 1.5rem;
 }
 
 body {
@@ -29,6 +136,19 @@ body {
 }
 
 /* Headers y títulos */
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.header-titles {
+    text-align: center;
+    flex-grow: 1;
+}
+
 h1, h2, h3 {
     text-align: center;
     color: var(--text-color);
@@ -45,6 +165,61 @@ h2 {
     color: #666;
     font-weight: normal;
     margin: 10px 0;
+}
+
+/* Menú de usuario */
+.user-menu {
+    position: relative;
+}
+
+.user-button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s ease;
+}
+
+.user-button:hover {
+    background-color: var(--primary-hover);
+}
+
+.user-dropdown {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background-color: white;
+    min-width: 160px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    border-radius: var(--border-radius);
+    z-index: 1000;
+}
+
+.user-dropdown.show {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.dropdown-item {
+    display: block;
+    padding: 12px 20px;
+    text-decoration: none;
+    color: var(--text-color);
+    transition: background-color 0.3s ease;
+}
+
+.dropdown-item:hover {
+    background-color: #f5f5f5;
+    color: var(--primary-color);
 }
 
 /* Botones y enlaces */
@@ -111,32 +286,42 @@ a:hover {
     padding: 20px;
 }
 
-.niveles-lista {
-    background-color: white;
-    padding: 30px;
-    border-radius: var(--border-radius);
-    box-shadow: var(--container-shadow);
-    margin-bottom: 30px;
+#contenido .niveles-lista {
     display: flex;
-    flex-wrap: wrap;
+    flex-direction: column;
     gap: var(--spacing-unit);
-    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    margin: 0 auto;
+    max-width: 400px;
 }
 
-.nivel-btn {
-    width: 80px;
-    height: 80px;
+#contenido .nivel-btn {
+    width: 100px;
+    height: 100px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 5px;
+    border-radius: 50%;
     background-color: var(--primary-color);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: all 0.3s ease-in-out;
 }
 
-.nivel-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(244,106,19,0.3);
+#contenido .nivel-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(244,106,19,0.4);
+}
+
+#contenido .nivel-link {
+    color: white;
+    text-decoration: none;
+    font-size: 1.5em;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
 }
 
 .nivel-link {

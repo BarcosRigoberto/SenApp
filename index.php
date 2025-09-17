@@ -12,35 +12,69 @@ if (isset($_SESSION['usuario'])) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="style.css">
     <title>SeñApp</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            display: flex;
-            font-family: Arial, sans-serif;
+</head>
+<body>
+    <div class="welcome-layout">
+        <!-- Sección de contenido (izquierda) -->
+        <div class="content-section">
+            <div class="bienvenida">
+                <h1>Bienvenido a SeñApp</h1>
+                <p class="app-description">
+                    Aprende lenguaje de señas de forma divertida y efectiva.
+                    ¡Comienza tu viaje de aprendizaje hoy mismo!
+                </p>
+            </div>
+            
+            <div class="button-section">
+                <button class="btn-comenzar" onclick="toggleDropdown()">Comenzar</button>
+                <div class="dropdown-menu" id="dropdownMenu">
+                    <a href="Login.php" class="dropdown-item">Iniciar Sesión</a>
+                    <a href="Registro.php" class="dropdown-item">Registrarse</a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sección del logo (derecha) -->
+        <div class="logo-section">
+            <img src="logoblanco.svg" alt="SeñApp Logo" class="giant-logo">
+        </div>
+    </div>
+    
+    <div class="overlay" id="overlay"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Agregar controlador de eventos para cerrar el menú al hacer clic fuera
+            document.getElementById('overlay').addEventListener('click', function() {
+                closeDropdown();
+            });
+
+            // Cerrar el menú con la tecla Escape
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeDropdown();
+                }
+            });
+        });
+
+        function toggleDropdown() {
+            const dropdown = document.getElementById('dropdownMenu');
+            const overlay = document.getElementById('overlay');
+            dropdown.classList.toggle('show');
+            overlay.classList.toggle('show');
         }
 
-        .welcome-layout {
-            display: flex;
-            width: 100%;
-            min-height: 100vh;
+        function closeDropdown() {
+            const dropdown = document.getElementById('dropdownMenu');
+            const overlay = document.getElementById('overlay');
+            dropdown.classList.remove('show');
+            overlay.classList.remove('show');
         }
-
-        .content-section {
+    </script>
+</body>
+</html>
             flex: 1;
-            background-color: white;
-            padding: 60px 50px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            min-width: 400px;
-            max-width: 500px;
-        }
-
-        .logo-section {
-            flex: 1;
-            background: linear-gradient(135deg, #f46a13 0%, #b44704 100%);
+            background: linear-gradient(135deg, #f46a13 0%, #ffc311 100%);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -68,7 +102,7 @@ if (isset($_SESSION['usuario'])) {
             width: 300px;
             height: 300px;
             z-index: 1;
-            filter: drop-shadow(0 20px 40px rgba(0,0,0,0.3));
+            
             animation: float 6s ease-in-out infinite;
         }
 
@@ -247,7 +281,6 @@ if (isset($_SESSION['usuario'])) {
 </head>
 <body>
     <div class="welcome-layout">
-        <!-- Sección de contenido (izquierda) -->
         <div class="content-section">
             <div class="bienvenida">
                 <h1>Bienvenido a SeñApp</h1>
@@ -271,7 +304,6 @@ if (isset($_SESSION['usuario'])) {
             </div>
         </div>
         
-        <!-- Sección del logo (derecha) -->
         <div class="logo-section">
             <img src="logoblanco.svg" alt="SeñApp Logo" class="giant-logo">
         </div>
@@ -280,7 +312,6 @@ if (isset($_SESSION['usuario'])) {
     <div class="overlay" id="overlay" onclick="closeDropdown()"></div>
 
     <script>
-        // Función para mostrar/ocultar dropdown
         function toggleDropdown() {
             console.log('Botón clickeado'); // Debug
             const dropdown = document.getElementById('dropdown');
@@ -299,7 +330,6 @@ if (isset($_SESSION['usuario'])) {
             }
         }
 
-        // Función para cerrar dropdown
         function closeDropdown() {
             const dropdown = document.getElementById('dropdown');
             const overlay = document.getElementById('overlay');
@@ -311,11 +341,9 @@ if (isset($_SESSION['usuario'])) {
             }
         }
 
-        // Asegurar que el DOM esté cargado
         document.addEventListener('DOMContentLoaded', function() {
             console.log('DOM cargado');
             
-            // Agregar event listener al botón
             const button = document.getElementById('btnComenzar');
             if (button) {
                 button.addEventListener('click', toggleDropdown);
@@ -325,7 +353,6 @@ if (isset($_SESSION['usuario'])) {
             }
         });
 
-        // Cerrar con tecla Escape
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 closeDropdown();

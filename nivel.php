@@ -62,24 +62,6 @@ if($ejercicio['type'] == 'Elegir') {
     if(!empty($ejercicio['rtaD'])) $opciones[] = $ejercicio['rtaD'];
     shuffle($opciones);
 }
-
-// Check if this is the last lesson of the level
-$isLastLesson = ($leccion == $total);
-
-// If answer is correct and it's the last lesson, increase user level
-if(isset($esCorrecta) && $esCorrecta && $isLastLesson) {
-    $update_level = "UPDATE usuarios SET User_Lvl = User_Lvl + 1 WHERE User_Name = ? AND User_Lvl = ?";
-    $stmt_update = $conexion->prepare($update_level);
-    $stmt_update->bind_param("si", $_SESSION['usuario'], $nivel);
-    $stmt_update->execute();
-    
-    // Redirect to main page after level completion
-    if($stmt_update->affected_rows > 0) {
-        $_SESSION['mensaje'] = "¡Felicidades! Has completado el nivel " . $nivel;
-        header("Location: PagPrincipal.php");
-        exit();
-    }
-}
 ?>
 
 <!DOCTYPE html>
@@ -169,8 +151,8 @@ if(isset($esCorrecta) && $esCorrecta && $isLastLesson) {
                                 Siguiente lección &rarr;
                             </a>
                         <?php else: ?>
-                            <a href="PagPrincipal.php" class="btn-siguiente">
-                                Volver al mapa de niveles
+                            <a href="Resultados.php" class="btn-siguiente">
+                                Ver resultados
                             </a>
                         <?php endif; ?>
                     </div>
