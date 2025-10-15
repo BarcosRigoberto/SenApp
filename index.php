@@ -14,8 +14,11 @@ if (isset($_SESSION['usuario'])) {
     <title>SeñApp</title>
 </head>
 <body>
+    
     <div class="welcome-layout">
-        <!-- Sección de contenido (izquierda) -->
+        <div class="logo-section">
+            <img src="iconos/logoblanco.svg" alt="SeñApp Logo" class="giant-logo">
+        </div>
         <div class="content-section">
             <div class="bienvenida">
                 <h1>Bienvenido a SeñApp</h1>
@@ -33,14 +36,9 @@ if (isset($_SESSION['usuario'])) {
                 </div>
             </div>
         </div>
+
         
-        <!-- Sección del logo (derecha) -->
-        <div class="logo-section">
-            <img src="logoblanco.svg" alt="SeñApp Logo" class="giant-logo">
-        </div>
     </div>
-    
-    <div class="overlay" id="overlay"></div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {

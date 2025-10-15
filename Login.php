@@ -5,7 +5,6 @@ include("conn.php");
 $error = '';
 $success = '';
 
-// Mensajes del sistema
 if (isset($_GET['msg'])) {
     switch ($_GET['msg']) {
         case 'registered':
@@ -17,7 +16,6 @@ if (isset($_GET['msg'])) {
     }
 }
 
-// Procesar el login
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login-btn'])) {
     $email = isset($_POST['correo']) ? trim($_POST['correo']) : '';
     $password = isset($_POST['password']) ? $_POST['password'] : '';
@@ -29,7 +27,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login-btn'])) {
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = "El correo electrónico no es válido.";
     } else {
-    // incluir User_Lvl para establecer el nivel del usuario en la sesión
     $stmt = $conexion->prepare("SELECT User_ID, User_Name, User_Mail, User_Pass, User_Lvl FROM usuarios WHERE User_Mail = ?");
         
         if ($stmt) {

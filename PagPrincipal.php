@@ -84,47 +84,27 @@ while ($nivel_row = $result_niveles->fetch_assoc()) {
     <title>SeñApp Niveles</title>
     <link rel="stylesheet" href="style.css">
 </head>
-            color: white;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2em;
-            border: 2px solid #000;
-            box-shadow: 2px 2px #000000;
-        }
-        
-        @media (max-width: 600px) {
-            #contenido .nivel-btn {
-                width: 100px;
-                height: 100px;
-            }
-            
-            #contenido .nivel-numero {
-                font-size: 2em;
-            }
-        }
-    </style>
-</head>
 <body>
     <header>
-        <div class="header-content">
+        <div class="header-titles">
+            <h1>SeñApp</h1>
+        </div>
+
+        <div class="menu-inferior">
             <div class="ranking-button-left">
-                <a href="ranking.php" class="btn-ranking">🏆 Ranking</a>
+                <a href="ranking.php" class="btn-ranking">
+                    <img src="iconos/trofeo.svg" alt="Ranking" class="trofeo-svg">
+                    Ranking
+                </a>
             </div>
-            <div class="header-titles">
-                <h1>SeñApp</h1>
-                <h2>Aprende Lenguaje de Señas</h2>
-            </div>
+
             <div class="user-menu">
                 <button class="user-button" onclick="toggleMenu()">
+                    <img src="iconos/usuario.svg" alt="Usuario" class="usuario-icon">
                     <?php echo htmlspecialchars($_SESSION['usuario']); ?>
                 </button>
                 <div class="user-dropdown" id="userDropdown">
-                    <a href="ver_progreso.php" class="dropdown-item">📊 Ver mi progreso</a>
-                    <a href="logout.php" class="dropdown-item">🚪 Cerrar sesión</a>
+                    <a href="logout.php">Cerrar Sesión</a>
                 </div>
             </div>
         </div>
@@ -136,7 +116,7 @@ while ($nivel_row = $result_niveles->fetch_assoc()) {
         }
 
         window.onclick = function(event) {
-            if (!event.target.matches('.user-button')) {
+            if (!event.target.matches('.user-button') && !event.target.matches('.usuario-icon')) {
                 var dropdowns = document.getElementsByClassName("user-dropdown");
                 for (var i = 0; i < dropdowns.length; i++) {
                     var openDropdown = dropdowns[i];
@@ -161,7 +141,7 @@ while ($nivel_row = $result_niveles->fetch_assoc()) {
                 // Determinar clase
                 if ($nivel_bloqueado) {
                     $clase = 'bloqueado';
-                    $contenido = '🔒';
+                    $contenido = '<img src="iconos/candado.svg" alt="Bloqueado" class="icono-candado">';
                 } elseif ($nivel_completado) {
                     $clase = 'completado';
                     $contenido = $num_nivel;

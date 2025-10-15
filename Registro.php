@@ -128,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 >
             </div>
             
-            <button type="submit" class="button button-primary">Registrarse</button>
+            <button type="submit" class="button">Registrarse</button>
         </form>
         
         <div class="auth-links">

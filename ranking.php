@@ -67,13 +67,13 @@ if (!$usuario_en_top) {
             <?php foreach ($top_usuarios as $index => $usuario): ?>
                 <li class="ranking-item <?php echo ($usuario['User_ID'] == $user_id) ? 'usuario-actual' : ''; ?>">
                     <?php if ($index == 0): ?>
-                        <span class="medalla">🥇</span>
+                        
                         <div class="posicion oro">1</div>
                     <?php elseif ($index == 1): ?>
-                        <span class="medalla">🥈</span>
+                        
                         <div class="posicion plata">2</div>
                     <?php elseif ($index == 2): ?>
-                        <span class="medalla">🥉</span>
+                        
                         <div class="posicion bronce">3</div>
                     <?php else: ?>
                         <div class="posicion"><?php echo $index + 1; ?></div>

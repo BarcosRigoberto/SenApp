@@ -197,7 +197,7 @@ $puntos_ganados = isset($_GET['puntos']) ? (int)$_GET['puntos'] : 0;
     <div class="contenedor-nivel">
         <?php if ($mensaje == 'correcto'): ?>
             <div class="mensaje-transitorio">
-                ¡Correcto! Pasando al siguiente ejercicio incompleto...
+                ¡Correcto!
             </div>
         <?php endif; ?>
         
