@@ -14,7 +14,6 @@ if (isset($_SESSION['usuario'])) {
     <title>SeñApp</title>
 </head>
 <body>
-    
     <div class="welcome-layout">
         <div class="logo-section">
             <img src="iconos/logoblanco.svg" alt="SeñApp Logo" class="giant-logo">
@@ -23,49 +22,14 @@ if (isset($_SESSION['usuario'])) {
             <div class="bienvenida">
                 <h1>Bienvenido a SeñApp</h1>
                 <p class="app-description">
-                    Aprende lenguaje de señas de forma divertida y efectiva.
-                    ¡Comienza tu viaje de aprendizaje hoy mismo!
+                    Aprende Lengua de Señas Argentino Hoy
                 </p>
             </div>
             
             <div class="button-section">
-                <button class="btn-comenzar" onclick="toggleDropdown()">Comenzar</button>
-                <div class="dropdown-menu" id="dropdownMenu">
-                    <a href="Login.php" class="dropdown-item">Iniciar Sesión</a>
-                    <a href="Registro.php" class="dropdown-item">Registrarse</a>
-                </div>
+                <a href="Login.php" class="btn-comenzar" style="display: inline-block; text-decoration: none;">Comenzar</a>
             </div>
         </div>
-
-        
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('overlay').addEventListener('click', function() {
-                closeDropdown();
-            });
-
-            document.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    closeDropdown();
-                }
-            });
-        });
-
-        function toggleDropdown() {
-            const dropdown = document.getElementById('dropdownMenu');
-            const overlay = document.getElementById('overlay');
-            dropdown.classList.toggle('show');
-            overlay.classList.toggle('show');
-        }
-
-        function closeDropdown() {
-            const dropdown = document.getElementById('dropdownMenu');
-            const overlay = document.getElementById('overlay');
-            dropdown.classList.remove('show');
-            overlay.classList.remove('show');
-        }
-    </script>
 </body>
 </html>

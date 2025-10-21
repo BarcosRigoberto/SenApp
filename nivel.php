@@ -181,7 +181,7 @@ $puntos_ganados = isset($_GET['puntos']) ? (int)$_GET['puntos'] : 0;
             <div class="progreso-detallado">
                 <div class="progreso">
                     Ejercicio <?php echo $posicion_actual; ?>/<?php echo $total_incompletos; ?> 
-                    <span style="font-size: 0.85em; opacity: 0.7;">(incompletos)</span>
+                    
                 </div>
             </div>
         </div>

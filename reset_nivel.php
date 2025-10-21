@@ -125,9 +125,7 @@ foreach ($ejercicios_nivel as $ej_id) {
             <h3 style="margin-top: 0;">Esta acción:</h3>
             <ul style="text-align: left; margin: 15px 0;">
                 <li>Borrará tu progreso actual en este nivel</li>
-                <li>Eliminará los <?php echo $ejercicios_completados; ?> ejercicio(s) completado(s)</li>
-                <li>Te permitirá volver a intentar todos los ejercicios</li>
-                <li><strong>No afectará tus puntos totales ya obtenidos</strong></li>
+                <li>Perderas todos los puntos que hayas ganado en este nivel</li>
             </ul>
             <p style="margin-top: 15px; color: #856404;">
                 <strong>Nota:</strong> Esta acción es irreversible.

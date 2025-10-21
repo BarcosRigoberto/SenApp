@@ -93,7 +93,7 @@ while ($nivel_row = $result_niveles->fetch_assoc()) {
         <div class="menu-inferior">
             <div class="ranking-button-left">
                 <a href="ranking.php" class="btn-ranking">
-                    <img src="iconos/trofeo.svg" alt="Ranking" class="trofeo-svg">
+                    <img src="iconos/trofeo.svg" class="trofeo-svg" alt="Ranking">
                     Ranking
                 </a>
             </div>
@@ -112,20 +112,19 @@ while ($nivel_row = $result_niveles->fetch_assoc()) {
     
     <script>
         function toggleMenu() {
-            document.getElementById('userDropdown').classList.toggle('show');
+            const dropdown = document.getElementById('userDropdown');
+            dropdown.classList.toggle('show');
         }
 
-        window.onclick = function(event) {
-            if (!event.target.matches('.user-button') && !event.target.matches('.usuario-icon')) {
-                var dropdowns = document.getElementsByClassName("user-dropdown");
-                for (var i = 0; i < dropdowns.length; i++) {
-                    var openDropdown = dropdowns[i];
-                    if (openDropdown.classList.contains('show')) {
-                        openDropdown.classList.remove('show');
-                    }
+        // Cerrar el menú si se hace clic fuera de él
+        window.addEventListener('click', function(event) {
+            if (!event.target.closest('.user-menu')) {
+                const dropdown = document.getElementById('userDropdown');
+                if (dropdown.classList.contains('show')) {
+                    dropdown.classList.remove('show');
                 }
             }
-        }
+        });
     </script>
     
     <div id="contenido">

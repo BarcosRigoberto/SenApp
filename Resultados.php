@@ -111,18 +111,7 @@ if ($nivel_completado && $user_level == $nivel) {
         </div>
 
         <div class="estadisticas">
-            <div class="stat-item">
-                <div class="stat-number"><?php echo $total_completados; ?></div>
-                <div class="stat-label">Ejercicios Completados</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number"><?php echo $ejercicios_incompletos; ?></div>
-                <div class="stat-label">Ejercicios Pendientes</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-number"><?php echo $total_nivel; ?></div>
-                <div class="stat-label">Total del Nivel</div>
-            </div>
+            
         </div>
 
         <?php if ($subio_nivel): ?>
@@ -139,24 +128,17 @@ if ($nivel_completado && $user_level == $nivel) {
         
         <div class="puntos-totales">
             <p><strong>Puntos totales:</strong> <?php echo $puntos_actuales; ?> pts</p>
-            <?php if ($nivel_completado): ?>
-                <p style="font-size: 0.9em; color: #666; margin-top: 10px;">
-                    (<?php echo $puntos_ejercicios; ?> pts por ejercicios + <?php echo $bonus_nivel; ?> pts bonus = <?php echo $puntos_ejercicios + $bonus_nivel; ?> pts ganados)
-                </p>
-            <?php endif; ?>
         </div>
 
         <?php if (!$nivel_completado && $ejercicios_incompletos > 0): ?>
             <div class="incompletos-warning">
                 <strong>⚠️ Aún tienes <?php echo $ejercicios_incompletos; ?> ejercicio<?php echo $ejercicios_incompletos > 1 ? 's' : ''; ?> sin completar</strong>
-                <p style="margin-top: 10px;">Completa los ejercicios restantes para ganar más puntos (10 pts c/u)</p>
+                <p style="margin-top: 10px;">Completa los ejercicios restantes para ganar más puntos</p>
             </div>
         <?php endif; ?>
 
         <div class="botones-navegacion">
-            <a href="PagPrincipal.php" class="button button-secondary">
-                Volver al mapa
-            </a>
+            
             
             <?php if ($nivel_completado): ?>
                 <?php 
@@ -174,23 +156,14 @@ if ($nivel_completado && $user_level == $nivel) {
                     <a href="nivel.php?nivel=<?php echo $nivel + 1; ?>" class="button button-primary">
                         Siguiente Nivel →
                     </a>
-                <?php else: ?>
-                    <div class="mensaje-info">
-                        🎊 ¡Felicitaciones! Has completado todos los niveles disponibles
-                    </div>
-                <?php endif; ?>
-            <?php else: ?>
-                <a href="nivel.php?nivel=<?php echo $nivel; ?>" class="button button-primary">
-                    Reintentar ejercicios →
+                    <?php endif; ?>
+                <a href="reset_nivel.php?nivel=<?php echo $nivel; ?>" class="button button-reset">
+                    Reiniciar Nivel
                 </a>
             <?php endif; ?>
-        </div>
-        
-        <?php if ($todos_completados): ?>
-            <div class="mensaje-info" style="margin-top: 20px;">
-                ✨ Ya completaste todos los ejercicios de este nivel anteriormente
-            </div>
-        <?php endif; ?>
+            <a href="PagPrincipal.php" class="button button-secondary">
+                Volver al mapa
+            </a>
     </div>
 </body>
 </html>
