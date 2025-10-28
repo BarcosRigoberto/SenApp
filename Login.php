@@ -5,8 +5,6 @@ include("conn.php");
 $error = '';
 $success = '';
 
-
-
 if (isset($_GET['msg'])) {
     switch ($_GET['msg']) {
         case 'registered':
@@ -21,12 +19,6 @@ if (isset($_GET['msg'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login-btn'])) {
     $email = isset($_POST['correo']) ? trim($_POST['correo']) : '';
     $password = isset($_POST['password']) ? $_POST['password'] : '';
-    
-    if ($debug_mode) {
-        error_log("=== LOGIN ATTEMPT ===");
-        error_log("Email: " . $email);
-        error_log("Password length: " . strlen($password));
-    }
     
     if (empty($email)) {
         $error = "El correo electrónico es obligatorio.";
@@ -45,67 +37,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login-btn'])) {
             if ($result->num_rows === 1) {
                 $user = $result->fetch_assoc();
                 
-                if ($debug_mode) {
-                    error_log("User found: " . $user['User_Name']);
-                    error_log("Hash in DB: " . substr($user['User_Pass'], 0, 20) . "...");
-                    error_log("Hash length: " . strlen($user['User_Pass']));
-                }
-                
-                // Verificar si el hash es válido (debe empezar con $2y$)
-                if (strpos($user['User_Pass'], '$2y$') !== 0 && strpos($user['User_Pass'], '$2a$') !== 0) {
-                    if ($debug_mode) {
-                        error_log("WARNING: Password not properly hashed!");
+                if (password_verify($password, $user['User_Pass'])) {
+                    // establecer claves de sesión usadas en otras páginas
+                    $_SESSION['user_id'] = $user['User_ID'];
+                    $_SESSION['user_name'] = $user['User_Name'];
+                    $_SESSION['user_email'] = $user['User_Mail'];
+                    $_SESSION['logged_in'] = true;
+                    // clave que usan otras páginas en el proyecto
+                    $_SESSION['usuario'] = $user['User_Name'];
+                    // almacenar nivel del usuario si existe
+                    if (isset($user['User_Lvl'])) {
+                        $_SESSION['User_Lvl'] = (int) $user['User_Lvl'];
                     }
-                    $error = "Error en la configuración de la cuenta. Por favor, contacta al administrador.";
+
+                    // redirigir al mapa principal después de iniciar sesión
+                    header("Location: PagPrincipal.php");
+                    exit();
                 } else {
-                    // Intentar verificar la contraseña
-                    $verify_result = password_verify($password, $user['User_Pass']);
-                    
-                    if ($debug_mode) {
-                        error_log("Password verify result: " . ($verify_result ? "TRUE" : "FALSE"));
-                    }
-                    
-                    if ($verify_result) {
-                        // Contraseña correcta - establecer sesión
-                        $_SESSION['user_id'] = $user['User_ID'];
-                        $_SESSION['user_name'] = $user['User_Name'];
-                        $_SESSION['user_email'] = $user['User_Mail'];
-                        $_SESSION['logged_in'] = true;
-                        $_SESSION['usuario'] = $user['User_Name'];
-                        
-                        if (isset($user['User_Lvl'])) {
-                            $_SESSION['User_Lvl'] = (int) $user['User_Lvl'];
-                        }
-                        
-                        if ($debug_mode) {
-                            error_log("Login successful! Redirecting to PagPrincipal.php");
-                        }
-                        
-                        header("Location: PagPrincipal.php");
-                        exit();
-                    } else {
-                        $error = "Correo electrónico o contraseña incorrectos.";
-                        
-                        if ($debug_mode) {
-                            error_log("Password verification failed");
-                        }
-                    }
+                    $error = "Correo electrónico o contraseña incorrectos.";
                 }
             } else {
                 $error = "Correo electrónico o contraseña incorrectos.";
-                
-                if ($debug_mode) {
-                    error_log("User not found with email: " . $email);
-                }
             }
             
             $stmt->close();
         } else {
             $error = "Error en el servidor. Inténtalo más tarde.";
-            
-            if ($debug_mode) {
-                error_log("Database error: " . $conexion->error);
-            }
         }
     }
 }
@@ -156,7 +113,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login-btn'])) {
         <div class="register-link">
             <a href="Registro.php">¿No tienes usuario? Regístrate aquí</a>
         </div>
-    
     </div>
 </body>
 </html>

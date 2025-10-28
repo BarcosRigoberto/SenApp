@@ -109,25 +109,21 @@ foreach ($ejercicios_nivel as $ej_id) {
     <title>Reiniciar Nivel <?php echo $nivel; ?> - SeñApp</title>
     <link rel="stylesheet" href="style.css">
 </head>
-            transform: translate(5px, 5px);
-        }
-    </style>
-</head>
 <body>
-    <div class="reset-container" style="background: white; text-align: center;">
+    <div class="reset-container">
         <div class="warning-icon">⚠️</div>
         <h1>Reiniciar Nivel <?php echo $nivel; ?></h1>
-        <p style="color: #666; font-size: 1.1em;">
+        <p>
             ¿Estás seguro de que deseas reiniciar este nivel?
         </p>
         
         <div class="reset-info">
-            <h3 style="margin-top: 0;">Esta acción:</h3>
-            <ul style="text-align: left; margin: 15px 0;">
+            <h3>Esta acción:</h3>
+            <ul>
                 <li>Borrará tu progreso actual en este nivel</li>
                 <li>Perderas todos los puntos que hayas ganado en este nivel</li>
             </ul>
-            <p style="margin-top: 15px; color: #856404;">
+            <p class="nota-irreversible">
                 <strong>Nota:</strong> Esta acción es irreversible.
             </p>
         </div>
@@ -145,3 +141,4 @@ foreach ($ejercicios_nivel as $ej_id) {
     </div>
 </body>
 </html>
+

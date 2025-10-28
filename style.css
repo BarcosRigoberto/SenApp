@@ -1088,9 +1088,9 @@ header h2 {
     margin: 40px auto;
     padding: 30px;
     background-color: var(--white);
-    border-radius: var(--border-radius);
     border: 2px solid var(--grey-color);
     box-shadow: 0px 4px 0px 0px var(--grey-color);
+    text-align: center;
 }
 
 .warning-icon {
@@ -1117,11 +1117,13 @@ header h2 {
     color: var(--text-color);
     margin-bottom: 12px;
     font-weight: 800;
+    margin-top: 0;
 }
 
 .reset-info ul {
-    margin: 12px 0;
+    margin: 15px 0;
     padding-left: 20px;
+    text-align: left;
 }
 
 .reset-info li {
@@ -1548,4 +1550,262 @@ footer .check_button:active {
     50% {
         opacity: 0.7;
     }
+}
+
+
+/* ========================================
+   ESTILOS MOVIDOS DE PHP
+======================================== */
+
+/* --- Estilos Admin Panel (admin_panel.php) --- */
+.admin-container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+}
+
+.admin-header {
+    background: linear-gradient(135deg, var(--color-principal) 0%, var(--color-principal-light) 100%);
+    color: white;
+    padding: 30px;
+    border-radius: var(--border-radius);
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.admin-header p {
+    margin-top: 10px; 
+    opacity: 0.9;
+}
+
+.admin-header .button-container {
+    margin-top: 15px;
+}
+
+/* Ajuste para que el botón "Volver" se vea bien */
+.admin-header .button-container .button {
+    display: inline-block; 
+    width: auto; 
+    padding: 10px 25px;
+}
+
+.admin-section {
+    background-color: var(--white);
+    border: 2px solid var(--grey-color);
+    border-radius: var(--border-radius);
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0px 4px 0px 0px var(--grey-color);
+}
+
+.admin-section h2 {
+    color: var(--color-principal);
+    margin-bottom: 20px;
+    font-size: 1.5em;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.form-grid-full {
+    grid-column: 1 / -1;
+}
+
+/* Mensaje de "No hay ejercicios" */
+.no-content-msg {
+    text-align: center; 
+    color: #666; 
+    padding: 30px;
+}
+
+/* Color de texto para el <small> en el form */
+.form-group small {
+    color: #666;
+}
+
+/* Margen para los mensajes de éxito/error */
+.admin-container .mensaje {
+    margin-bottom: 20px;
+}
+
+/* === INICIO CAMBIOS: Estilos para botones de edición de nivel === */
+
+.nivel-editor-grid {
+    display: grid;
+    /* Columnas compactas, de 80px de ancho mínimo */
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    /* Espaciado reducido */
+    gap: 10px;
+}
+
+.nivel-editor-btn {
+    display: flex;
+    /* Centrar el número */
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    border-radius: var(--border-radius);
+    background-color: var(--light-grey);
+    border: 2px solid var(--grey-color);
+    box-shadow: 0px 4px 0px 0px var(--grey-color);
+    text-decoration: none;
+    color: var(--black);
+    transition: all 0.2s ease-in-out;
+    /* Hacemos que sea un cuadrado */
+    height: 80px;
+    width: 100%; /* El ancho lo da la grilla */
+}
+
+.nivel-editor-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0px 6px 0px 0px var(--grey-color);
+    background-color: #f0f0f0;
+    color: var(--color-principal);
+}
+
+.nivel-editor-titulo {
+    /* Número grande y centrado */
+    font-size: 2em;
+    font-weight: 800;
+    margin: 0;
+}
+
+/* Ocultamos los spans de stats y cta */
+.nivel-editor-stats,
+.nivel-editor-cta {
+    display: none;
+}
+
+/* === FIN CAMBIOS === */
+
+
+.btn-eliminar {
+    background-color: var(--red);
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: var(--border-radius-small);
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.85em;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-eliminar:hover {
+    background-color: #cc0000;
+}
+
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* --- Estilos Editar Nivel (editar_nivel.php) --- */
+.admin-container {
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 20px;
+}
+
+/* El header de editar nivel usa 'blue' */
+.admin-header.editar-nivel {
+    background: linear-gradient(135deg, var(--blue) 0%, var(--color-principal-light) 100%);
+}
+
+.ejercicio-card {
+    background-color: var(--white);
+    border: 2px solid var(--grey-color);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0px 4px 0px 0px var(--grey-color);
+}
+
+.ejercicio-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--light-grey);
+    padding-bottom: 15px;
+}
+
+.ejercicio-id {
+    background-color: var(--color-principal);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 1em;
+}
+
+/* Mensaje "No hay ejercicios" con fondo blanco */
+.editable-nivel.no-content-msg {
+    background: var(--white);
+    border-radius: var(--border-radius);
+}
+
+.btn-guardar {
+    background-color: var(--green);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: var(--border-radius-small);
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 1em;
+    transition: all 0.2s ease-in-out;
+    width: 100%;
+    margin-top: 15px;
+}
+
+.btn-guardar:hover {
+    background-color: #006f4e; /* Un verde más oscuro */
+}
+
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* --- Estilos Ranking (ranking.php) --- */
+.ranking-container > p {
+    text-align: center; 
+    color: #666;
+}
+
+.ranking-container .volver-link-container {
+    text-align: center; 
+    margin-top: 30px;
+}
+
+/* --- Estilos Reset Nivel (reset_nivel.php) --- */
+.reset-container > p {
+    color: #666; 
+    font-size: 1.1em;
+}
+
+.reset-info .nota-irreversible {
+    margin-top: 15px; 
+    color: #856404;
+}
+
+/* --- Estilos Resultados (Resultados.php) --- */
+.felicitaciones p {
+    font-size: 1.2em; 
+    margin: 10px 0;
+}
+
+.incompletos-warning p {
+    margin-top: 10px;
 }

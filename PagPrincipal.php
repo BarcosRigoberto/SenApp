@@ -9,7 +9,20 @@ if (!isset($_SESSION['usuario'])) {
     exit();
 }
 
+
 $user_id = $_SESSION['user_id'];
+// Después de obtener el nivel del usuario, agregar:
+$es_admin = false;
+$stmt_admin = $conexion->prepare("SELECT User_IsAdmin FROM usuarios WHERE User_ID = ?");
+if ($stmt_admin) {
+    $stmt_admin->bind_param("i", $user_id);
+    $stmt_admin->execute();
+    $result_admin = $stmt_admin->get_result();
+    if ($row_admin = $result_admin->fetch_assoc()) {
+        $es_admin = ($row_admin['User_IsAdmin'] == 1);
+    }
+    $stmt_admin->close();
+}
 
 // Función para obtener progreso del usuario
 function obtenerProgreso($conexion, $user_id) {
@@ -104,8 +117,11 @@ while ($nivel_row = $result_niveles->fetch_assoc()) {
                     <?php echo htmlspecialchars($_SESSION['usuario']); ?>
                 </button>
                 <div class="user-dropdown" id="userDropdown">
-                    <a href="logout.php">Cerrar Sesión</a>
-                </div>
+                    <?php if ($es_admin): ?>
+                        <a href="admin_panel.php">🛠️ Panel Admin</a>
+                    <?php endif; ?>
+                <a href="logout.php">Cerrar Sesión</a>
+</div>
             </div>
         </div>
     </header>
