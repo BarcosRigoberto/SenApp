@@ -8,8 +8,15 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $nivel = isset($_GET['nivel']) ? (int)$_GET['nivel'] : 1;
+$unidad = isset($_GET['unidad']) ? trim($_GET['unidad']) : '';
 $user_id = $_SESSION['user_id'];
 $todos_completados = isset($_GET['todos_completados']) ? true : false;
+
+// Validar que tengamos unidad
+if (empty($unidad)) {
+    header("Location: PagPrincipal.php");
+    exit();
+}
 
 // Función para obtener progreso del usuario
 function obtenerProgreso($conexion, $user_id) {
@@ -27,10 +34,10 @@ function obtenerProgreso($conexion, $user_id) {
 // Obtener progreso del usuario
 $progreso_usuario = obtenerProgreso($conexion, $user_id);
 
-// Obtener todos los ejercicios del nivel
-$query_ejercicios = "SELECT id_ej FROM ejercicio WHERE nivel = ?";
+// Obtener todos los ejercicios de la unidad y nivel específico
+$query_ejercicios = "SELECT id_ej FROM ejercicio WHERE nivel = ? AND unidad = ?";
 $stmt_ej = $conexion->prepare($query_ejercicios);
-$stmt_ej->bind_param("i", $nivel);
+$stmt_ej->bind_param("is", $nivel, $unidad);
 $stmt_ej->execute();
 $result_ej = $stmt_ej->get_result();
 
@@ -50,8 +57,8 @@ foreach ($ejercicios_nivel as $ej_id) {
 
 $total_nivel = count($ejercicios_nivel);
 $ejercicios_incompletos = $total_nivel - $total_completados;
-$nivel_completado = ($total_completados >= $total_nivel);
-$porcentaje = $nivel_completado ? 100 : round(($total_completados / $total_nivel) * 100);
+$nivel_completado = ($total_completados >= $total_nivel && $total_nivel > 0);
+$porcentaje = ($total_nivel > 0) ? round(($total_completados / $total_nivel) * 100) : 0;
 
 // Obtener nivel actual del usuario y puntos actuales
 $query_user = "SELECT User_Lvl, User_Points FROM usuarios WHERE User_ID = ?";
@@ -66,22 +73,38 @@ $stmt_user->close();
 // Calcular puntos ganados en esta sesión (10 por ejercicio completado)
 $puntos_ejercicios = $total_completados * 10;
 
-// Solo actualizar nivel y dar bonus si es la primera vez que completa el nivel
+// Solo dar bonus si es la primera vez que completa la unidad
 $bonus_nivel = 0;
 $subio_nivel = false;
 
 if ($nivel_completado && $user_level == $nivel) {
     $bonus_nivel = 50;
     
-    $update = "UPDATE usuarios SET User_Lvl = ?, User_Points = User_Points + ? WHERE User_ID = ?";
-    $stmt_update = $conexion->prepare($update);
-    $new_level = $nivel + 1;
-    $stmt_update->bind_param("iii", $new_level, $bonus_nivel, $user_id);
-    $stmt_update->execute();
-    $stmt_update->close();
+    // Verificar si hay más unidades en este nivel antes de subir
+    $query_check_unidades = "SELECT COUNT(DISTINCT unidad) as total_unidades,
+                             COUNT(DISTINCT CASE WHEN id_ej IN (" . implode(',', array_fill(0, count($progreso_usuario), '?')) . ") THEN unidad END) as unidades_completas
+                             FROM ejercicio WHERE nivel = ?";
+    $stmt_check = $conexion->prepare($query_check_unidades);
     
-    $subio_nivel = true;
-    $puntos_actuales += $bonus_nivel;
+    $types = str_repeat('i', count($progreso_usuario)) . 'i';
+    $params = array_merge($progreso_usuario, [$nivel]);
+    $stmt_check->bind_param($types, ...$params);
+    $stmt_check->execute();
+    $unidades_data = $stmt_check->get_result()->fetch_assoc();
+    $stmt_check->close();
+    
+    // Solo subir de nivel si completó TODAS las unidades del nivel
+    if ($unidades_data['total_unidades'] == $unidades_data['unidades_completas']) {
+        $update = "UPDATE usuarios SET User_Lvl = ?, User_Points = User_Points + ? WHERE User_ID = ?";
+        $stmt_update = $conexion->prepare($update);
+        $new_level = $nivel + 1;
+        $stmt_update->bind_param("iii", $new_level, $bonus_nivel, $user_id);
+        $stmt_update->execute();
+        $stmt_update->close();
+        
+        $subio_nivel = true;
+        $puntos_actuales += $bonus_nivel;
+    }
 }
 ?>
 
@@ -90,17 +113,18 @@ if ($nivel_completado && $user_level == $nivel) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resultados Nivel <?php echo $nivel; ?> - SeñApp</title>
+    <title>Resultados - <?php echo htmlspecialchars($unidad); ?> - SeñApp</title>
     <link rel="stylesheet" href="style.css">
-</head>
 </head>
 <body>
     <div class="contenedor-resultados">
         <div class="mensaje-nivel-completado">
             <?php if ($nivel_completado): ?>
-                <h1>🎉 ¡Nivel <?php echo $nivel; ?> Completado!</h1>
+                <h1>🎉 ¡Unidad Completada!</h1>
+                <h2><?php echo htmlspecialchars($unidad); ?> - Nivel <?php echo $nivel; ?></h2>
             <?php else: ?>
-                <h1>Progreso en Nivel <?php echo $nivel; ?></h1>
+                <h1>Progreso en <?php echo htmlspecialchars($unidad); ?></h1>
+                <h2>Nivel <?php echo $nivel; ?></h2>
             <?php endif; ?>
             
             <div class="progreso-bar">
@@ -128,6 +152,7 @@ if ($nivel_completado && $user_level == $nivel) {
         
         <div class="puntos-totales">
             <p><strong>Puntos totales:</strong> <?php echo $puntos_actuales; ?> pts</p>
+            <p><strong>Ejercicios completados:</strong> <?php echo $total_completados; ?>/<?php echo $total_nivel; ?></p>
         </div>
 
         <?php if (!$nivel_completado && $ejercicios_incompletos > 0): ?>
@@ -138,32 +163,47 @@ if ($nivel_completado && $user_level == $nivel) {
         <?php endif; ?>
 
         <div class="botones-navegacion">
-            
-            
             <?php if ($nivel_completado): ?>
                 <?php 
-                // Verificar si existe el siguiente nivel
-                $query_next = "SELECT COUNT(*) as existe FROM ejercicio WHERE nivel = ?";
-                $stmt_next = $conexion->prepare($query_next);
-                $next_nivel = $nivel + 1;
-                $stmt_next->bind_param("i", $next_nivel);
-                $stmt_next->execute();
-                $existe_siguiente = $stmt_next->get_result()->fetch_assoc()['existe'] > 0;
-                $stmt_next->close();
+                // CORRECCIÓN: Obtener la siguiente unidad/nivel
+                // Ordenamos PRIMERO por unidad, LUEGO por nivel (para mantener unidades juntas)
+                $query_all_units = "SELECT DISTINCT unidad, nivel FROM ejercicio ORDER BY unidad ASC, nivel ASC";
+                $result_all = $conexion->query($query_all_units);
+                
+                $todas_unidades = [];
+                while ($row = $result_all->fetch_assoc()) {
+                    $todas_unidades[] = $row;
+                }
+                
+                // Buscar la posición actual
+                $posicion_actual = -1;
+                for ($i = 0; $i < count($todas_unidades); $i++) {
+                    if ($todas_unidades[$i]['nivel'] == $nivel && $todas_unidades[$i]['unidad'] == $unidad) {
+                        $posicion_actual = $i;
+                        break;
+                    }
+                }
+                
+                // Obtener la siguiente unidad/nivel
+                $siguiente = null;
+                if ($posicion_actual >= 0 && $posicion_actual < count($todas_unidades) - 1) {
+                    $siguiente = $todas_unidades[$posicion_actual + 1];
+                }
                 ?>
                 
-                <?php if ($existe_siguiente): ?>
-                    <a href="nivel.php?nivel=<?php echo $nivel + 1; ?>" class="button button-primary">
+                <?php if ($siguiente): ?>
+                    <a href="nivel.php?nivel=<?php echo $siguiente['nivel']; ?>&unidad=<?php echo urlencode($siguiente['unidad']); ?>" class="button button-primary">
                         Siguiente Nivel →
                     </a>
-                    <?php endif; ?>
-                <a href="reset_nivel.php?nivel=<?php echo $nivel; ?>" class="button button-reset">
+                <?php endif; ?>
+                <a href="nivel.php?nivel=<?php echo $nivel; ?>&unidad=<?php echo urlencode($unidad); ?>" class="button button-reset">
                     Reiniciar Nivel
                 </a>
             <?php endif; ?>
             <a href="PagPrincipal.php" class="button button-secondary">
                 Volver al mapa
             </a>
+        </div>
     </div>
 </body>
 </html>

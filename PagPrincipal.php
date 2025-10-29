@@ -1,5 +1,5 @@
 <?php
-//Pagina principal (mapa de niveles)
+//Pagina principal (mapa de niveles con unidades)
 include 'conn.php';
 session_start();
 
@@ -9,9 +9,9 @@ if (!isset($_SESSION['usuario'])) {
     exit();
 }
 
-
 $user_id = $_SESSION['user_id'];
-// Después de obtener el nivel del usuario, agregar:
+
+// Verificar si es admin
 $es_admin = false;
 $stmt_admin = $conexion->prepare("SELECT User_IsAdmin FROM usuarios WHERE User_ID = ?");
 if ($stmt_admin) {
@@ -53,38 +53,44 @@ if ($stmt) {
 // Obtener progreso del usuario
 $progreso_usuario = obtenerProgreso($conexion, $user_id);
 
-// Obtener todos los niveles disponibles
-$query = "SELECT DISTINCT nivel FROM ejercicio ORDER BY nivel ASC";
+// Obtener todos los niveles y unidades agrupados
+$query = "SELECT DISTINCT nivel, unidad FROM ejercicio ORDER BY nivel ASC, unidad ASC";
 $result_niveles = $conexion->query($query);
 
-$niveles_info = [];
-while ($nivel_row = $result_niveles->fetch_assoc()) {
-    $nivel_num = $nivel_row['nivel'];
+$unidades_con_niveles = [];
+while ($row = $result_niveles->fetch_assoc()) {
+    $nivel_num = $row['nivel'];
+    $unidad = $row['unidad'];
     
-    // Obtener ejercicios del nivel
-    $query_ej = "SELECT id_ej FROM ejercicio WHERE nivel = ?";
+    // Obtener ejercicios de esta combinación nivel-unidad
+    $query_ej = "SELECT id_ej FROM ejercicio WHERE nivel = ? AND unidad = ?";
     $stmt_ej = $conexion->prepare($query_ej);
-    $stmt_ej->bind_param("i", $nivel_num);
+    $stmt_ej->bind_param("is", $nivel_num, $unidad);
     $stmt_ej->execute();
     $result_ej = $stmt_ej->get_result();
     
-    $ejercicios_nivel = [];
+    $ejercicios_unidad = [];
     while ($ej = $result_ej->fetch_assoc()) {
-        $ejercicios_nivel[] = $ej['id_ej'];
+        $ejercicios_unidad[] = $ej['id_ej'];
     }
     $stmt_ej->close();
     
     // Contar completados
     $completados = 0;
-    foreach ($ejercicios_nivel as $ej_id) {
+    foreach ($ejercicios_unidad as $ej_id) {
         if (in_array($ej_id, $progreso_usuario)) {
             $completados++;
         }
     }
     
-    $niveles_info[] = [
+    // Agrupar por unidad primero, luego agregar niveles
+    if (!isset($unidades_con_niveles[$unidad])) {
+        $unidades_con_niveles[$unidad] = [];
+    }
+    
+    $unidades_con_niveles[$unidad][] = [
         'nivel' => $nivel_num,
-        'total_ejercicios' => count($ejercicios_nivel),
+        'total_ejercicios' => count($ejercicios_unidad),
         'ejercicios_completados' => $completados
     ];
 }
@@ -96,6 +102,16 @@ while ($nivel_row = $result_niveles->fetch_assoc()) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SeñApp Niveles</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        .unidad-titulo {
+            color: var(--text-color);
+            font-size: 1.2em;
+            font-weight: 700;
+            margin: 30px 0 15px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--grey-color);
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -120,8 +136,12 @@ while ($nivel_row = $result_niveles->fetch_assoc()) {
                     <?php if ($es_admin): ?>
                         <a href="admin_panel.php">🛠️ Panel Admin</a>
                     <?php endif; ?>
-                <a href="logout.php">Cerrar Sesión</a>
-</div>
+                    <a href="">Editar informacion</a>
+                    <a href="">Configuracion</a>
+                    <a href="">Creditos</a>
+                    <a href="logout.php">Cerrar Sesión</a>
+                    
+                </div>
             </div>
         </div>
     </header>
@@ -132,7 +152,6 @@ while ($nivel_row = $result_niveles->fetch_assoc()) {
             dropdown.classList.toggle('show');
         }
 
-        // Cerrar el menú si se hace clic fuera de él
         window.addEventListener('click', function(event) {
             if (!event.target.closest('.user-menu')) {
                 const dropdown = document.getElementById('userDropdown');
@@ -145,43 +164,47 @@ while ($nivel_row = $result_niveles->fetch_assoc()) {
     
     <div id="contenido">
         <div class="niveles-lista">
-            <?php foreach($niveles_info as $nivel_data): 
-                $num_nivel = $nivel_data['nivel'];
-                $total = $nivel_data['total_ejercicios'];
-                $completados = $nivel_data['ejercicios_completados'];
-                $porcentaje = $total > 0 ? round(($completados / $total) * 100) : 0;
-                $nivel_completado = ($completados >= $total);
-                $nivel_bloqueado = ($num_nivel > $nivel_usuario);
+            <?php foreach($unidades_con_niveles as $unidad => $niveles): ?>
+                <h3 class="unidad-titulo"><?php echo htmlspecialchars($unidad); ?></h3>
                 
-                // Determinar clase
-                if ($nivel_bloqueado) {
-                    $clase = 'bloqueado';
-                    $contenido = '<img src="iconos/candado.svg" alt="Bloqueado" class="icono-candado">';
-                } elseif ($nivel_completado) {
-                    $clase = 'completado';
-                    $contenido = $num_nivel;
-                } else {
-                    $clase = 'incompleto';
-                    $contenido = $num_nivel;
-                }
-            ?>
-                <?php if ($nivel_bloqueado): ?>
-                    <div class="nivel-btn <?php echo $clase; ?>">
-                        <span class="nivel-numero"><?php echo $contenido; ?></span>
-                    </div>
-                <?php else: ?>
-                    <a href="nivel.php?nivel=<?php echo $num_nivel; ?>" class="nivel-btn <?php echo $clase; ?>">
-                        <span class="nivel-numero"><?php echo $contenido; ?></span>
-                        
-                        <?php if ($nivel_completado): ?>
-                            <span class="nivel-check">✓</span>
-                        <?php endif; ?>
-                        
-                        <?php if (!$nivel_completado && $completados > 0): ?>
-                            <span class="nivel-progreso-mini"><?php echo $porcentaje; ?>%</span>
-                        <?php endif; ?>
-                    </a>
-                <?php endif; ?>
+                <?php foreach($niveles as $nivel_data): 
+                    $nivel_num = $nivel_data['nivel'];
+                    $total = $nivel_data['total_ejercicios'];
+                    $completados = $nivel_data['ejercicios_completados'];
+                    $porcentaje = $total > 0 ? round(($completados / $total) * 100) : 0;
+                    $nivel_completado = ($completados >= $total);
+                    $nivel_bloqueado = ($nivel_num > $nivel_usuario);
+                    
+                    // Determinar clase
+                    if ($nivel_bloqueado) {
+                        $clase = 'bloqueado';
+                        $contenido = '<img src="iconos/candado.svg" alt="Bloqueado" class="icono-candado">';
+                    } elseif ($nivel_completado) {
+                        $clase = 'completado';
+                        $contenido = $nivel_num;
+                    } else {
+                        $clase = 'incompleto';
+                        $contenido = $nivel_num;
+                    }
+                ?>
+                    <?php if ($nivel_bloqueado): ?>
+                        <div class="nivel-btn <?php echo $clase; ?>">
+                            <span class="nivel-numero"><?php echo $contenido; ?></span>
+                        </div>
+                    <?php else: ?>
+                        <a href="nivel.php?nivel=<?php echo $nivel_num; ?>&unidad=<?php echo urlencode($unidad); ?>" class="nivel-btn <?php echo $clase; ?>">
+                            <span class="nivel-numero"><?php echo $contenido; ?></span>
+                            
+                            <?php if ($nivel_completado): ?>
+                                <span class="nivel-check">✓</span>
+                            <?php endif; ?>
+                            
+                            <?php if (!$nivel_completado && $completados > 0): ?>
+                                <span class="nivel-progreso-mini"><?php echo $porcentaje; ?>%</span>
+                            <?php endif; ?>
+                        </a>
+                    <?php endif; ?>
+                <?php endforeach; ?>
             <?php endforeach; ?>
         </div>
     </div>

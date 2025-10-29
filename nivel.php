@@ -9,7 +9,15 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $nivel = isset($_GET['nivel']) ? (int)$_GET['nivel'] : 1;
+$unidad = isset($_GET['unidad']) ? trim($_GET['unidad']) : '';
 $user_id = $_SESSION['user_id'];
+$ejercicio_actual = isset($_GET['ejercicio']) ? (int)$_GET['ejercicio'] : 0;
+
+// Validar que tengamos unidad
+if (empty($unidad)) {
+    header("Location: PagPrincipal.php");
+    exit();
+}
 
 // Función para obtener progreso del usuario
 function obtenerProgreso($conexion, $user_id) {
@@ -24,7 +32,7 @@ function obtenerProgreso($conexion, $user_id) {
     return is_array($progreso) ? $progreso : [];
 }
 
-// Función para actualizar el JSON de progreso y dar puntos
+// Función para actualizar el JSON de progreso y dar puntos SOLO la primera vez
 function actualizarProgresoJSON($conexion, $user_id, $ejercicio_id) {
     $progreso = obtenerProgreso($conexion, $user_id);
     
@@ -47,21 +55,16 @@ function actualizarProgresoJSON($conexion, $user_id, $ejercicio_id) {
     return false; // Ya estaba completado, no se otorgan puntos
 }
 
-// Función para verificar si un ejercicio está completado
-function ejercicioCompletado($progreso, $ejercicio_id) {
-    return in_array($ejercicio_id, $progreso);
-}
-
 // Obtener progreso del usuario
 $progreso_usuario = obtenerProgreso($conexion, $user_id);
 
-// Obtener todos los ejercicios del nivel
-$query_todos = "SELECT e.id_ej, e.nivel, e.rtaAcorrect, e.rtaB, e.rtaC, e.rtaD, e.video, e.type
+// Obtener TODOS los ejercicios del nivel y unidad específica (sin filtrar)
+$query_todos = "SELECT e.id_ej, e.nivel, e.unidad, e.rtaAcorrect, e.rtaB, e.rtaC, e.rtaD, e.video, e.type
                 FROM ejercicio e
-                WHERE e.nivel = ?
+                WHERE e.nivel = ? AND e.unidad = ?
                 ORDER BY e.id_ej ASC";
 $stmt_todos = $conexion->prepare($query_todos);
-$stmt_todos->bind_param("i", $nivel);
+$stmt_todos->bind_param("is", $nivel, $unidad);
 $stmt_todos->execute();
 $result_todos = $stmt_todos->get_result();
 
@@ -72,40 +75,31 @@ while ($row = $result_todos->fetch_assoc()) {
 $stmt_todos->close();
 
 if (empty($todos_ejercicios)) {
-    echo "No hay ejercicios disponibles para este nivel.";
+    echo "No hay ejercicios disponibles para este nivel y unidad.";
     exit;
 }
 
-// Filtrar solo ejercicios incompletos
-$ejercicios_incompletos = [];
-foreach ($todos_ejercicios as $ej) {
-    if (!ejercicioCompletado($progreso_usuario, $ej['id_ej'])) {
-        $ejercicios_incompletos[] = $ej;
-    }
-}
+$total_ejercicios = count($todos_ejercicios);
 
-// Si no hay ejercicios incompletos, todos están completados
-if (empty($ejercicios_incompletos)) {
-    header("Location: Resultados.php?nivel=$nivel&todos_completados=1");
-    exit();
-}
-
-// Si el usuario quiere saltar el ejercicio actual
-$saltar = isset($_GET['saltar']) ? true : false;
-$indice_ejercicio = 0;
-
-if ($saltar && count($ejercicios_incompletos) > 1) {
-    // Rotar al siguiente ejercicio incompleto
-    $primer_ejercicio = array_shift($ejercicios_incompletos);
-    $ejercicios_incompletos[] = $primer_ejercicio;
+// Validar índice del ejercicio actual
+if ($ejercicio_actual < 0 || $ejercicio_actual >= $total_ejercicios) {
+    $ejercicio_actual = 0;
 }
 
 // Obtener el ejercicio actual
-$ejercicio = $ejercicios_incompletos[$indice_ejercicio];
-$total_incompletos = count($ejercicios_incompletos);
-$total_nivel = count($todos_ejercicios);
-$total_completados = count($todos_ejercicios) - count($ejercicios_incompletos);
-$posicion_actual = 1;
+$ejercicio = $todos_ejercicios[$ejercicio_actual];
+
+// Contar ejercicios ya completados
+$total_completados = 0;
+foreach ($todos_ejercicios as $ej) {
+    if (in_array($ej['id_ej'], $progreso_usuario)) {
+        $total_completados++;
+    }
+}
+
+// Variable para controlar si mostrar resultado correcto
+$mostrar_correcto = false;
+$puntos_otorgados = false;
 
 // Procesar respuesta tipo Escribir
 if(isset($_POST['respuesta']) && $ejercicio['type'] == 'Escribir') {
@@ -119,16 +113,9 @@ if(isset($_POST['respuesta']) && $ejercicio['type'] == 'Escribir') {
     $esCorrecta = ($respuesta_usuario === $respuesta_correcta);
 
     if ($esCorrecta) {
-        // Actualizar JSON y otorgar puntos si es nuevo
+        // Actualizar progreso (solo da puntos si es primera vez)
         $puntos_otorgados = actualizarProgresoJSON($conexion, $user_id, $ejercicio['id_ej']);
-        
-        // Redirigir al mismo nivel para cargar el siguiente incompleto
-        $params = "nivel=$nivel&mensaje=correcto";
-        if ($puntos_otorgados) {
-            $params .= "&puntos=10";
-        }
-        header("Location: nivel.php?$params");
-        exit();
+        $mostrar_correcto = true;
     }
 }
 
@@ -137,16 +124,9 @@ if(isset($_POST['opcion']) && $ejercicio['type'] == 'Elegir') {
     $esCorrecta = ($_POST['opcion'] === $ejercicio['rtaAcorrect']);
     
     if ($esCorrecta) {
-        // Actualizar JSON y otorgar puntos si es nuevo
+        // Actualizar progreso (solo da puntos si es primera vez)
         $puntos_otorgados = actualizarProgresoJSON($conexion, $user_id, $ejercicio['id_ej']);
-        
-        // Redirigir al mismo nivel para cargar el siguiente incompleto
-        $params = "nivel=$nivel&mensaje=correcto";
-        if ($puntos_otorgados) {
-            $params .= "&puntos=10";
-        }
-        header("Location: nivel.php?$params");
-        exit();
+        $mostrar_correcto = true;
     }
 }
 
@@ -160,9 +140,8 @@ if($ejercicio['type'] == 'Elegir') {
     shuffle($opciones);
 }
 
-// Mostrar mensaje de respuesta anterior si existe
-$mensaje = isset($_GET['mensaje']) ? $_GET['mensaje'] : '';
-$puntos_ganados = isset($_GET['puntos']) ? (int)$_GET['puntos'] : 0;
+// Verificar si este ejercicio ya fue completado antes
+$ya_completado = in_array($ejercicio['id_ej'], $progreso_usuario);
 ?>
 
 <!DOCTYPE html>
@@ -170,9 +149,8 @@ $puntos_ganados = isset($_GET['puntos']) ? (int)$_GET['puntos'] : 0;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nivel <?php echo $nivel; ?> - SeñApp</title>
+    <title>Nivel <?php echo $nivel; ?> - <?php echo htmlspecialchars($unidad); ?> - SeñApp</title>
     <link rel="stylesheet" href="style.css">
-</head>
 </head>
 <body>
     <header>
@@ -180,129 +158,134 @@ $puntos_ganados = isset($_GET['puntos']) ? (int)$_GET['puntos'] : 0;
             <a href="PagPrincipal.php" class="btn-volver">&larr; Volver al mapa</a>
             <div class="progreso-detallado">
                 <div class="progreso">
-                    Ejercicio <?php echo $posicion_actual; ?>/<?php echo $total_incompletos; ?> 
-                    
+                    Ejercicio <?php echo ($ejercicio_actual + 1); ?>/<?php echo $total_ejercicios; ?>
                 </div>
             </div>
         </div>
-        <h1>Nivel <?php echo $nivel; ?></h1>
+        <h1>Nivel <?php echo $nivel; ?> - <?php echo htmlspecialchars($unidad); ?></h1>
         <div class="progreso-info" style="text-align: center;">
             <?php 
-            $porcentaje = round(($total_completados / $total_nivel) * 100);
+            $porcentaje = round(($total_completados / $total_ejercicios) * 100);
             ?>
-            Progreso total: <?php echo $total_completados; ?>/<?php echo $total_nivel; ?> (<?php echo $porcentaje; ?>%)
+            Progreso: <?php echo $total_completados; ?>/<?php echo $total_ejercicios; ?> (<?php echo $porcentaje; ?>%)
         </div>
     </header>
 
     <div class="contenedor-nivel">
-        <?php if ($mensaje == 'correcto'): ?>
-            <div class="mensaje-transitorio">
+        <?php if ($mostrar_correcto): ?>
+            <div class="mensaje-transitorio" style="background-color: var(--green); margin-bottom: 20px;">
                 ¡Correcto!
             </div>
-        <?php endif; ?>
-        
-        <?php if ($puntos_ganados > 0): ?>
-            <div class="mensaje-puntos">
-                🎉 ¡+<?php echo $puntos_ganados; ?> puntos! 🎉
-            </div>
+            
+            <?php if ($puntos_otorgados): ?>
+                <div class="mensaje-puntos">
+                    🎉 ¡+10 puntos! 🎉
+                </div>
+            <?php else: ?>
+                
+            <?php endif; ?>
         <?php endif; ?>
         
         <div class="gif-container">
             <img src="videos/<?php echo $ejercicio['video']; ?>" alt="Seña animada" class="gif-seña">
         </div>
 
-        <?php if($ejercicio['type'] == 'Escribir'): ?>
-            <div class="ejercicio-container">
-                <form method="POST" class="form-respuesta">
-                    <input type="text" 
-                           name="respuesta" 
-                           placeholder="Escribe tu respuesta" 
-                           required 
-                           class="input-respuesta"
-                           autocomplete="off">
-                    <button type="submit" class="btn-responder">Responder</button>
-                </form>
-                
-                <?php if(isset($esCorrecta) && !$esCorrecta): ?>
-                    <div class="mensaje-resultado incorrecto">
-                        Incorrecto. Intenta de nuevo.
-                    </div>
-                    <div class="navegacion">
-                        <a href="nivel.php?nivel=<?php echo $nivel; ?>" class="btn-siguiente secundario">
-                            ↻ Intentar de nuevo
-                        </a>
-                        <?php if ($total_incompletos > 1): ?>
-                            <a href="nivel.php?nivel=<?php echo $nivel; ?>&saltar=1" class="btn-siguiente">
-                                Saltar ejercicio →
-                            </a>
-                        <?php else: ?>
-                            <a href="PagPrincipal.php" class="btn-siguiente">
-                                ← Volver al mapa
-                            </a>
-                        <?php endif; ?>
-                    </div>
-                <?php endif; ?>
-            </div>
-        <?php endif; ?>
-
-        <?php if($ejercicio['type'] == 'Elegir'): ?>
-            <div class="ejercicio-container">
-                <?php if(!isset($esCorrecta)): ?>
-                    <form method="POST" class="form-opciones">
-                        <?php foreach($opciones as $opcion): ?>
-                            <button type="submit" 
-                                    name="opcion" 
-                                    value="<?php echo htmlspecialchars($opcion); ?>" 
-                                    class="btn-opcion">
-                                <?php echo htmlspecialchars($opcion); ?>
-                            </button>
-                        <?php endforeach; ?>
-                    </form>
+        <?php if ($mostrar_correcto): ?>
+            <!-- Mostrar botón para continuar -->
+            <div class="navegacion" style="margin-top: 30px;">
+                <?php if ($ejercicio_actual >= $total_ejercicios - 1): ?>
+                    <!-- Es el último ejercicio, ir a resultados -->
+                    <a href="Resultados.php?nivel=<?php echo $nivel; ?>&unidad=<?php echo urlencode($unidad); ?>" 
+                       class="btn-siguiente">
+                        Ver Resultados 🎯
+                    </a>
                 <?php else: ?>
-                    <div class="form-opciones">
-                        <?php foreach($opciones as $opcion): 
-                            $esLaCorrecta = ($opcion === $ejercicio['rtaAcorrect']);
-                            $clase = $esLaCorrecta ? 'correcta' : 'incorrecta';
-                        ?>
-                            <button class="btn-opcion <?php echo $clase; ?>" disabled>
-                                <?php echo htmlspecialchars($opcion); ?>
-                            </button>
-                        <?php endforeach; ?>
-                    </div>
-                    <div class="mensaje-resultado incorrecto">
-                        Incorrecto. La respuesta correcta era: <strong><?php echo htmlspecialchars($ejercicio['rtaAcorrect']); ?></strong>
-                    </div>
-                    <div class="navegacion">
-                        <a href="nivel.php?nivel=<?php echo $nivel; ?>" class="btn-siguiente secundario">
-                            ↻ Intentar de nuevo
-                        </a>
-                        <?php if ($total_incompletos > 1): ?>
-                            <a href="nivel.php?nivel=<?php echo $nivel; ?>&saltar=1" class="btn-siguiente">
-                                Saltar ejercicio →
-                            </a>
-                        <?php else: ?>
-                            <a href="PagPrincipal.php" class="btn-siguiente">
-                                ← Volver al mapa
-                            </a>
-                        <?php endif; ?>
-                    </div>
+                    <!-- Ir al siguiente ejercicio -->
+                    <a href="nivel.php?nivel=<?php echo $nivel; ?>&unidad=<?php echo urlencode($unidad); ?>&ejercicio=<?php echo ($ejercicio_actual + 1); ?>" 
+                       class="btn-siguiente">
+                        Continuar →
+                    </a>
                 <?php endif; ?>
             </div>
+        <?php else: ?>
+            <!-- Mostrar formulario si no ha respondido correctamente -->
+            <?php if($ejercicio['type'] == 'Escribir'): ?>
+                <div class="ejercicio-container">
+                    <form method="POST" class="form-respuesta">
+                        <input type="text" 
+                               name="respuesta" 
+                               placeholder="Escribe tu respuesta" 
+                               required 
+                               class="input-respuesta"
+                               autocomplete="off">
+                        <button type="submit" class="btn-responder">Responder</button>
+                    </form>
+                    
+                    <?php if(isset($esCorrecta) && !$esCorrecta): ?>
+                        <div class="mensaje-resultado incorrecto">
+                            ❌ Incorrecto. Intenta de nuevo.
+                        </div>
+                        <div class="navegacion">
+                            <a href="nivel.php?nivel=<?php echo $nivel; ?>&unidad=<?php echo urlencode($unidad); ?>&ejercicio=<?php echo $ejercicio_actual; ?>" class="btn-siguiente secundario">
+                                ↻ Intentar de nuevo
+                            </a>
+                            <?php if ($ejercicio_actual < $total_ejercicios - 1): ?>
+                                <a href="nivel.php?nivel=<?php echo $nivel; ?>&unidad=<?php echo urlencode($unidad); ?>&ejercicio=<?php echo ($ejercicio_actual + 1); ?>" class="btn-siguiente">
+                                    Saltar ejercicio →
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
+
+            <?php if($ejercicio['type'] == 'Elegir'): ?>
+                <div class="ejercicio-container">
+                    <?php if(!isset($esCorrecta)): ?>
+                        <form method="POST" class="form-opciones">
+                            <?php foreach($opciones as $opcion): ?>
+                                <button type="submit" 
+                                        name="opcion" 
+                                        value="<?php echo htmlspecialchars($opcion); ?>" 
+                                        class="btn-opcion">
+                                    <?php echo htmlspecialchars($opcion); ?>
+                                </button>
+                            <?php endforeach; ?>
+                        </form>
+                    <?php else: ?>
+                        <div class="form-opciones">
+                            <?php foreach($opciones as $opcion): 
+                                $esLaCorrecta = ($opcion === $ejercicio['rtaAcorrect']);
+                                $clase = $esLaCorrecta ? 'correcta' : 'incorrecta';
+                            ?>
+                                <button class="btn-opcion <?php echo $clase; ?>" disabled>
+                                    <?php echo htmlspecialchars($opcion); ?>
+                                </button>
+                            <?php endforeach; ?>
+                        </div>
+                        <div class="mensaje-resultado incorrecto">
+                            ❌ Incorrecto. La respuesta correcta era: <strong><?php echo htmlspecialchars($ejercicio['rtaAcorrect']); ?></strong>
+                        </div>
+                        <div class="navegacion">
+                            
+                            <?php if ($ejercicio_actual < $total_ejercicios - 1): ?>
+                                <a href="nivel.php?nivel=<?php echo $nivel; ?>&unidad=<?php echo urlencode($unidad); ?>&ejercicio=<?php echo ($ejercicio_actual + 1); ?>" class="btn-siguiente">
+                                    Saltar ejercicio →
+                                </a>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            <?php endif; ?>
         <?php endif; ?>
         
-        <div style="text-align: center; margin-top: 20px;">
-            <p style="color: #666; font-size: 0.9em;">
-                💡 Solo se muestran ejercicios incompletos. 
-                <?php if ($total_completados > 0): ?>
-                    Ya completaste <?php echo $total_completados; ?> ejercicio<?php echo $total_completados > 1 ? 's' : ''; ?> de este nivel.
-                <?php endif; ?>
-            </p>
-            <?php if ($saltar): ?>
-                <p style="color: #d55404; font-size: 0.9em; margin-top: 10px;">
-                    ⚠️ Ejercicio movido al final. Podrás intentarlo más tarde.
+        <?php if ($ya_completado && !$mostrar_correcto): ?>
+            <div style="text-align: center; margin-top: 20px;">
+                <p style="color: #666; font-size: 0.9em;">
+                    ℹ Ya completaste este ejercicio anteriormente
                 </p>
-            <?php endif; ?>
-        </div>
+            </div>
+        <?php endif; ?>
     </div>
 </body>
 </html>
